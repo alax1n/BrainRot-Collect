@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainRot Collect</title>
+    <style>
+        /* --- DESIGN GENERAL --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: #2b2b2b;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #444;
+            box-shadow: 0 0 30px black;
+            position: relative;
+        }
+
+        /* --- FLASH EFFECT --- */
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.05s ease-out;
+            z-index: 200;
+        }
+
+        /* --- SCREEN SHAKE --- */
+        .shake-screen { animation: shake-screen 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake-screen {
+            10%, 90% { transform: translate3d(-4px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        /* --- PARTICLES --- */
+        .particle {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        /* --- HEADER & NAVIGARE --- */
+        header {
+            background-color: #1a1a1a;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #333;
+            z-index: 10;
+        }
+
+        .resource { font-weight: bold; font-size: 1.1em; display: flex; align-items: center; gap: 5px; transition: transform 0.1s; }
+        .gold { color: #ffd700; }
+        .gems { color: #00ffcc; }
+        .res-pop { transform: scale(1.5); color: white; }
+
+        #main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(circle at center, #3a3a3a 0%, #2b2b2b 100%);
+        }
+
+        nav {
+            background-color: #1a1a1a;
+            display: flex;
+            border-top: 2px solid #333;
+            z-index: 10;
+        }
+
+        nav button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: #777;
+            font-size: 1em;
+            cursor: pointer;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        nav button:active { background-color: #333; }
+        nav button.active {
+            color: white;
+            background-color: #333;
+            border-top: 3px solid #ffcc00;
+            font-weight: bold;
+        }
+
+        /* --- CARDURI COLECȚIE --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding-bottom: 20px;
+        }
+        .card {
+            background-color: #222;
+            border-radius: 12px;
+            padding: 8px;
+            border: 2px solid #000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .card:active { transform: scale(0.95); }
+
+        .card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 8px;
+            background-color: #000;
+        }
+
+        .card.locked img {
+            filter: grayscale(100%) contrast(50%);
+            opacity: 0.6;
+        }
+
+        .card h3 { margin: 8px 0 4px 0; font-size: 0.85em; }
+
+        .rarity { font-size: 0.7em; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .rarity.common { color: #b0c3d9; }
+        .rarity.rare { color: #00aaff; }
+        .rarity.legendary { color: #ffaa00; text-shadow: 0 0 8px rgba(255, 170, 0, 0.4); }
+
+        /* --- CUFAR & ANIMATII --- */
+        .chest-scene {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #chest-visual {
+            font-size: 120px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        /* Idle Animation */
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .chest-idle { animation: breathe 2s infinite ease-in-out; }
+
+        /* Animație Tremurat */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            25% { transform: translate(-3px, -3px) rotate(-3deg); }
+            50% { transform: translate(3px, 3px) rotate(3deg); }
+            75% { transform: translate(-2px, -2px) rotate(-2deg); }
+            100% { transform: translate(1px, 1px) rotate(0deg); }
+        }
+
+        /* Animație Explozie */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.6) rotate(10deg); filter: brightness(3); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .is-shaking { animation: shake 0.1s infinite; }
+        .is-popping { animation: pop 0.4s forwards; }
+
+        .chest-btn {
+            background: linear-gradient(to bottom, #ffcc00, #ffaa00);
+            color: black;
+            font-weight: 800;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #b37700, 0 10px 10px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .chest-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #b37700; }
+        .chest-btn:disabled { background: #555; color: #888; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        /* --- POPUP (IMAGINEA REVELATA) --- */
+        #popup {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Animație Apariție Card */
+        @keyframes cardReveal {
+            0% { transform: scale(0.1) rotate(-15deg); opacity: 0; }
+            60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+            80% { transform: scale(0.95) rotate(-2deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        /* Animație Raze de Lumină (Fundal) */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .light-rays {
+            position: absolute;
+            width: 700px; height: 700px;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.15) 15deg, transparent 30deg);
+            animation: spin 8s linear infinite;
+            z-index: -1;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        #popup-content {
+            text-align: center;
+            animation: cardReveal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* AICI ESTE IMAGINEA MARE DIN POPUP */
+        #popup-img {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 6px solid white;
+            box-shadow: 0 0 80px rgba(255,255,255,0.6);
+            background: #000;
+        }
+
+        #popup h2 { margin: 0 0 15px 0; font-size: 2.5em; text-transform: uppercase; text-shadow: 0 5px 15px black; letter-spacing: 2px; }
+        #popup h3 { margin: 15px 0 0 0; font-size: 1.8em; text-shadow: 0 3px 8px black; }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .tap-msg { color: #aaa; font-size: 1em; margin-top: 25px; animation: pulse 1.5s infinite; text-transform: uppercase; letter-spacing: 1px; }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="flash-overlay"></div> <!-- FLASH EFFECT -->
+
+    <header>
+        <div class="resource gold" onclick="addGold()">💰 <span id="gold-display">1000</span></div>
+        <div class="resource gems">💎 <span id="gems-display">50</span></div>
+    </header>
+
+    <div id="main-content">
+        </div>
+
+    <nav>
+        <button onclick="showSection('shop')" id="btn-shop">🛒 Shop</button>
+        <button onclick="showSection('chest')" id="btn-chest" class="active">🎁 Chest</button>
+        <button onclick="showSection('collection')" id="btn-collection">📚 Carduri</button>
+    </nav>
+
+    <div id="popup" onclick="closePopup()">
+        <div class="light-rays"></div>
+        <div id="popup-content">
+            <h2 id="popup-title">NEW CARD!</h2>
+            <img id="popup-img" src="" alt="Premiu">
+            <h3 id="popup-name">Name</h3>
+            <p class="tap-msg">Click pentru a continua</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* --- BAZA DE DATE A JOCULUI --- */
+    let user = {
+        gold: 1000,
+        gems: 50,
+        collection: []
+    };
+
+    const characters = [
+        { id: 1, name: "Cactufantul Suprem", rarity: "legendary", img: "cactufant.jpg" },
+        { id: 2, name: "Drip Shark", rarity: "rare", img: "shark.jpg" },
+        { id: 3, name: "Croco-Bomber", rarity: "rare", img: "croco.jpg" },
+        { id: 4, name: "Bățul de Pază", rarity: "common", img: "batul.jpg" },
+        { id: 5, name: "Arborele Nasos", rarity: "common", img: "tree.jpg" }
+    ];
+
+    /* --- LOGICA PRINCIPALĂ --- */
+    function updateResources() {
+        const goldEl = document.getElementById('gold-display');
+        const gemsEl = document.getElementById('gems-display');
+
+        // Animatie simpla de pop daca se schimba valoarea
+        if(goldEl.innerText != user.gold) {
+            goldEl.innerText = user.gold;
+            goldEl.parentElement.classList.add('res-pop');
+            setTimeout(() => goldEl.parentElement.classList.remove('res-pop'), 200);
+        }
+
+        gemsEl.innerText = user.gems;
+    }
+
+    // CLICKER SECRET - Ca sa nu ramai blocat
+    function addGold() {
+        user.gold += 1;
+        updateResources();
+    }
+
+    function showSection(sectionName) {
+        const content = document.getElementById('main-content');
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn-' + sectionName).classList.add('active');
+
+        if (sectionName === 'shop') renderShop(content);
+        else if (sectionName === 'chest') renderChest(content);
+        else if (sectionName === 'collection') renderCollection(content);
+    }
+
+    /* --- CHEST & ANIMAȚII --- */
+    function renderChest(container) {
+        container.innerHTML = `
+            <div class="chest-scene">
+                <div id="chest-visual" class="chest-idle" onclick="startChestOpening()">📦</div>
+
+                <h3 id="chest-status" style="color:#ccc; margin-bottom: 30px;">Deschide pentru a câștiga!</h3>
+
+                <button id="btn-open-chest" class="chest-btn" onclick="startChestOpening()">
+                    DESCHIDE (100 💰)
+                </button>
+            </div>
+        `;
+    }
+
+    function startChestOpening() {
+        const cost = 100;
+        const chestVisual = document.getElementById('chest-visual');
+        const btn = document.getElementById('btn-open-chest');
+
+        if (btn.disabled) return; // Previne dublu click
+
+        if (user.gold >= cost) {
+            user.gold -= cost;
+            updateResources();
+
+            // 1. Blocăm interfața
+            btn.disabled = true;
+            btn.innerText = "DESCHIDERE...";
+
+            // 2. Animație de Tremurat
+            chestVisual.classList.remove('chest-idle');
+            chestVisual.classList.add('is-shaking');
+
+            setTimeout(() => {
+                // 3. Animație de Explozie (POP)
+                chestVisual.classList.remove('is-shaking');
+                chestVisual.classList.add('is-popping');
+
+                // EFECTE JUICY
+                triggerFlash();
+                triggerScreenShake();
+                createParticles(window.innerWidth / 2, window.innerHeight / 2 - 50);
+
+                setTimeout(() => {
+                    // 4. Alegem și afișăm personajul
+                    const randomIndex = Math.floor(Math.random() * characters.length);
+                    const droppedChar = characters[randomIndex];
+
+                    if (!user.collection.includes(droppedChar.id)) {
+                        user.collection.push(droppedChar.id);
+                    }
+
+                    showPopup(droppedChar);
+
+                    // 5. Resetăm cufărul
+                    chestVisual.classList.remove('is-popping');
+                    chestVisual.classList.add('chest-idle'); // Back to breathing
+                    btn.disabled = false;
+                    btn.innerText = "DESCHIDE (100 💰)";
+
+                }, 400); // Așteptăm să explodeze
+
+            }, 1000); // Timp de tremurat
+
+        } else {
+            // Shake button for feedback
+            btn.style.animation = "shake 0.3s";
+            setTimeout(() => btn.style.animation = "", 300);
+            alert("Nu ai destul Gold! (Click pe Gold sus pentru a primi 1)");
+        }
+    }
+
+    /* --- JUICY EFFECTS --- */
+    function triggerFlash() {
+        const flash = document.getElementById('flash-overlay');
+        flash.style.opacity = '1';
+        setTimeout(() => { flash.style.opacity = '0'; }, 100);
+    }
+
+    function triggerScreenShake() {
+        const app = document.getElementById('app-container');
+        app.classList.remove('shake-screen');
+        void app.offsetWidth; // Trigger reflow
+        app.classList.add('shake-screen');
+    }
+
+    function createParticles(x, y) {
+        const colors = ['#ffcc00', '#ff0055', '#00ffcc', '#ffffff', '#ffaa00'];
+        const particleCount = 60;
+        const container = document.getElementById('app-container'); // Punem in container sa nu iasa afara daca e pe desktop
+
+        // Rect pt pozitionare relativa la container
+        const rect = container.getBoundingClientRect();
+        // Ajustam X si Y sa fie relative la container
+        const relX = rect.width / 2;
+        const relY = rect.height / 2 - 100; // Mai sus un pic
+
+        for (let i = 0; i < particleCount; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            container.appendChild(p);
+
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            p.style.backgroundColor = color;
+            p.style.left = relX + 'px';
+            p.style.top = relY + 'px';
+
+            // Random velocity
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 8 + 4;
+            let vx = Math.cos(angle) * velocity;
+            let vy = Math.sin(angle) * velocity;
+
+            let posX = relX;
+            let posY = relY;
+            let opacity = 1;
+            let size = Math.random() * 8 + 4;
+
+            const anim = setInterval(() => {
+                posX += vx;
+                posY += vy;
+                vy += 0.2; // Gravity
+                opacity -= 0.015;
+
+                p.style.left = posX + 'px';
+                p.style.top = posY + 'px';
+                p.style.opacity = opacity;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+
+                if (opacity <= 0) {
+                    clearInterval(anim);
+                    p.remove();
+                }
+            }, 16);
+        }
+    }
+
+    // Funcția care atașează poza în fereastra de premiu
+    function showPopup(char) {
+        const popup = document.getElementById('popup');
+        const popupContent = document.getElementById('popup-content');
+        const imgElement = document.getElementById('popup-img');
+        const title = document.getElementById('popup-title');
+
+        // Resetăm animația CSS
+        popupContent.style.animation = 'none';
+        popupContent.offsetHeight;
+        popupContent.style.animation = null;
+
+        // ATAȘAREA IMAGINII DIN FIȘIER
+        imgElement.src = char.img;
+
+        document.getElementById('popup-name').innerText = char.name;
+
+        // Stilizare în funcție de raritate
+        if (char.rarity === 'legendary') {
+            title.innerText = "LEGENDARY!";
+            title.style.color = "#ffaa00";
+            imgElement.style.borderColor = "#ffaa00";
+            imgElement.style.boxShadow = "0 0 80px #ffaa00";
+            createParticles(0,0); // Extra confetti
+        } else if (char.rarity === 'rare') {
+            title.innerText = "RARE!";
+            title.style.color = "#00aaff";
+            imgElement.style.borderColor = "#00aaff";
+            imgElement.style.boxShadow = "0 0 50px #00aaff";
+        } else {
+            title.innerText = "COMMON";
+            title.style.color = "white";
+            imgElement.style.borderColor = "white";
+            imgElement.style.boxShadow = "0 0 30px white";
+        }
+
+        popup.style.display = 'flex';
+    }
+
+    function closePopup() {
+        document.getElementById('popup').style.display = 'none';
+    }
+
+    /* --- RENDERIZARE COLECȚIE --- */
+    function renderCollection(container) {
+        let html = '<div class="card-grid">';
+        characters.forEach(char => {
+            const isOwned = user.collection.includes(char.id);
+            const cssClass = isOwned ? 'card' : 'card locked';
+
+            html += `
+                <div class="${cssClass}">
+                    <img src="${char.img}" alt="${char.name}">
+                    <div style="padding:5px;">
+                        <div class="rarity ${char.rarity}">${char.rarity}</div>
+                        <h3>${char.name}</h3>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+    function renderShop(c){ c.innerHTML = '<h2>Shop (WIP)</h2>'; }
+
+    // Pornire
+    updateResources();
+    showSection('chest');
+
+</script>
+</body>
+</html>
