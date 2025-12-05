@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainRot Collect</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app-container">
+    <div id="flash-overlay"></div> <!-- FLASH EFFECT -->
+
+    <header>
+        <div class="resource gold" onclick="addGold()">💰 <span id="gold-display">1000</span></div>
+        <div class="resource gems">💎 <span id="gems-display">50</span></div>
+    </header>
+
+    <div id="main-content">
+        <!-- Content injected by JS -->
+    </div>
+
+    <nav>
+        <button onclick="showSection('shop')" id="btn-shop">🛒 Shop</button>
+        <button onclick="showSection('chest')" id="btn-chest" class="active">🎁 Chest</button>
+        <button onclick="showSection('juicer')" id="btn-juicer">🥤 Juicer</button>
+        <button onclick="showSection('collection')" id="btn-collection">📚 Carduri</button>
+    </nav>
+
+    <div id="popup" onclick="closePopup()">
+        <div class="light-rays"></div>
+        <div id="popup-content">
+            <h2 id="popup-title">NEW CARD!</h2>
+            <img id="popup-img" src="" alt="Premiu">
+            <h3 id="popup-name">Name</h3>
+            <p class="tap-msg">Click pentru a continua</p>
+        </div>
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>

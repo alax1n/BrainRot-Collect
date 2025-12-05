@@ -1,0 +1,291 @@
+/* --- DESIGN GENERAL --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+}
+
+#app-container {
+    width: 100%;
+    max-width: 420px;
+    background-color: #2b2b2b;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #444;
+    box-shadow: 0 0 30px black;
+    position: relative;
+}
+
+/* --- FLASH EFFECT --- */
+#flash-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: white;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.05s ease-out;
+    z-index: 200;
+}
+
+/* --- SCREEN SHAKE --- */
+.shake-screen { animation: shake-screen 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes shake-screen {
+    10%, 90% { transform: translate3d(-4px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+    40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+
+/* --- PARTICLES --- */
+.particle {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: gold;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 150;
+}
+
+/* --- HEADER & NAVIGARE --- */
+header {
+    background-color: #1a1a1a;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #333;
+    z-index: 10;
+}
+
+.resource { font-weight: bold; font-size: 1.1em; display: flex; align-items: center; gap: 5px; transition: transform 0.1s; }
+.gold { color: #ffd700; }
+.gems { color: #00ffcc; }
+.res-pop { transform: scale(1.5); color: white; }
+
+#main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    text-align: center;
+    position: relative;
+    background: radial-gradient(circle at center, #3a3a3a 0%, #2b2b2b 100%);
+}
+
+nav {
+    background-color: #1a1a1a;
+    display: flex;
+    border-top: 2px solid #333;
+    z-index: 10;
+}
+
+nav button {
+    flex: 1;
+    padding: 15px;
+    background: none;
+    border: none;
+    color: #777;
+    font-size: 1em;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+nav button:active { background-color: #333; }
+nav button.active {
+    color: white;
+    background-color: #333;
+    border-top: 3px solid #ffcc00;
+    font-weight: bold;
+}
+
+/* --- CARDURI COLECȚIE --- */
+.card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding-bottom: 20px;
+}
+.card {
+    background-color: #222;
+    border-radius: 12px;
+    padding: 8px;
+    border: 2px solid #000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+    position: relative;
+}
+.card:active { transform: scale(0.95); }
+
+.card img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 8px;
+    background-color: #000;
+}
+
+.card.locked img {
+    filter: grayscale(100%) contrast(50%);
+    opacity: 0.6;
+}
+
+.card h3 { margin: 8px 0 4px 0; font-size: 0.85em; }
+
+.rarity { font-size: 0.7em; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+.rarity.common { color: #b0c3d9; }
+.rarity.rare { color: #00aaff; }
+.rarity.epic { color: #9d00ff; text-shadow: 0 0 5px rgba(157, 0, 255, 0.4); }
+.rarity.legendary { color: #ffaa00; text-shadow: 0 0 8px rgba(255, 170, 0, 0.4); }
+
+.count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff0055;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8em;
+    border: 2px solid #2b2b2b;
+}
+
+/* --- CUFAR & ANIMATII --- */
+.chest-scene {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#chest-visual {
+    font-size: 120px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+/* Idle Animation */
+@keyframes breathe {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+.chest-idle { animation: breathe 2s infinite ease-in-out; }
+
+/* Animație Tremurat */
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    25% { transform: translate(-3px, -3px) rotate(-3deg); }
+    50% { transform: translate(3px, 3px) rotate(3deg); }
+    75% { transform: translate(-2px, -2px) rotate(-2deg); }
+    100% { transform: translate(1px, 1px) rotate(0deg); }
+}
+
+/* Animație Explozie */
+@keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.6) rotate(10deg); filter: brightness(3); }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.is-shaking { animation: shake 0.1s infinite; }
+.is-popping { animation: pop 0.4s forwards; }
+
+.chest-btn {
+    background: linear-gradient(to bottom, #ffcc00, #ffaa00);
+    color: black;
+    font-weight: 800;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1em;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #b37700, 0 10px 10px rgba(0,0,0,0.3);
+    text-transform: uppercase;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+.chest-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #b37700; }
+.chest-btn:disabled { background: #555; color: #888; box-shadow: none; cursor: not-allowed; transform: none; }
+
+/* --- POPUP (IMAGINEA REVELATA) --- */
+#popup {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+}
+
+/* Animație Apariție Card */
+@keyframes cardReveal {
+    0% { transform: scale(0.1) rotate(-15deg); opacity: 0; }
+    60% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+    80% { transform: scale(0.95) rotate(-2deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Animație Raze de Lumină (Fundal) */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.light-rays {
+    position: absolute;
+    width: 700px; height: 700px;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.15) 15deg, transparent 30deg);
+    animation: spin 8s linear infinite;
+    z-index: -1;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+#popup-content {
+    text-align: center;
+    animation: cardReveal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 2;
+}
+
+/* AICI ESTE IMAGINEA MARE DIN POPUP */
+#popup-img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 20px;
+    border: 6px solid white;
+    box-shadow: 0 0 80px rgba(255,255,255,0.6);
+    background: #000;
+}
+
+#popup h2 { margin: 0 0 15px 0; font-size: 2.5em; text-transform: uppercase; text-shadow: 0 5px 15px black; letter-spacing: 2px; }
+#popup h3 { margin: 15px 0 0 0; font-size: 1.8em; text-shadow: 0 3px 8px black; }
+
+@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+.tap-msg { color: #aaa; font-size: 1em; margin-top: 25px; animation: pulse 1.5s infinite; text-transform: uppercase; letter-spacing: 1px; }
+
+/* --- JUICER --- */
+.juicer-btn {
+    background: linear-gradient(to bottom, #00ffcc, #00aa88);
+    color: black;
+    font-weight: bold;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    margin-top: 10px;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: 0 4px 0 #007755;
+}
+.juicer-btn:active { transform: translateY(4px); box-shadow: none; }
